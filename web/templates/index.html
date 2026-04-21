@@ -15,8 +15,8 @@
             --bg-secondary: #161b22;
             --bg-tertiary: #21262d;
             --bg-card: #1c2128;
-            --nokia-blue: #124191;
-            --nokia-blue-light: #1a5bc4;
+            --primary-blue: #124191;
+            --primary-blue-light: #1a5bc4;
             --accent-green: #00c853;
             --accent-red: #ff1744;
             --accent-amber: #ffab00;
@@ -57,7 +57,7 @@
         .header-left { display: flex; align-items: center; gap: 16px; }
         .header-logo {
             width: 40px; height: 40px;
-            background: linear-gradient(135deg, var(--nokia-blue), var(--nokia-blue-light));
+            background: linear-gradient(135deg, var(--primary-blue), var(--primary-blue-light));
             border-radius: 10px;
             display: flex; align-items: center; justify-content: center;
             font-weight: 700; font-size: 18px; color: #fff;
@@ -124,7 +124,7 @@
         }
         .control-value {
             font-family: 'JetBrains Mono', monospace; font-weight: 500;
-            color: var(--nokia-blue-light); font-size: 0.85rem;
+            color: var(--primary-blue-light); font-size: 0.85rem;
         }
 
         input[type="range"] {
@@ -134,8 +134,8 @@
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; width: 18px; height: 18px;
-            border-radius: 50%; background: var(--nokia-blue);
-            border: 2px solid var(--nokia-blue-light);
+            border-radius: 50%; background: var(--primary-blue);
+            border: 2px solid var(--primary-blue-light);
             cursor: pointer; transition: var(--transition);
         }
         input[type="range"]::-webkit-slider-thumb:hover {
@@ -150,9 +150,9 @@
             font-family: inherit; font-size: 0.8rem; cursor: pointer;
             text-align: center; transition: var(--transition);
         }
-        .btn-option:hover { border-color: var(--nokia-blue); color: var(--text-primary); }
+        .btn-option:hover { border-color: var(--primary-blue); color: var(--text-primary); }
         .btn-option.active {
-            background: var(--nokia-blue); border-color: var(--nokia-blue);
+            background: var(--primary-blue); border-color: var(--primary-blue);
             color: #fff; font-weight: 600;
         }
 
@@ -167,7 +167,7 @@
             cursor: pointer; transition: var(--transition);
             border: 1px solid var(--border-color);
         }
-        .toggle.active { background: var(--nokia-blue); border-color: var(--nokia-blue); }
+        .toggle.active { background: var(--primary-blue); border-color: var(--primary-blue); }
         .toggle::after {
             content: ''; position: absolute; top: 3px; left: 3px;
             width: 16px; height: 16px; border-radius: 50%;
@@ -196,10 +196,10 @@
         }
         .result-card::before {
             content: ''; position: absolute; top: 0; left: 0; right: 0;
-            height: 3px; background: var(--nokia-blue);
+            height: 3px; background: var(--primary-blue);
         }
         .result-card:hover {
-            border-color: var(--nokia-blue);
+            border-color: var(--primary-blue);
             transform: translateY(-2px);
             box-shadow: var(--shadow);
         }
@@ -222,7 +222,7 @@
         }
         .result-value.green { color: var(--accent-green); }
         .result-value.red { color: var(--accent-red); }
-        .result-value.blue { color: var(--nokia-blue-light); }
+        .result-value.blue { color: var(--primary-blue-light); }
         .result-value.amber { color: var(--accent-amber); }
 
         .badge {
@@ -251,8 +251,8 @@
         }
         .tab:hover { color: var(--text-primary); }
         .tab.active {
-            color: var(--nokia-blue-light);
-            border-bottom-color: var(--nokia-blue);
+            color: var(--primary-blue-light);
+            border-bottom-color: var(--primary-blue);
             font-weight: 600;
         }
 
@@ -280,7 +280,7 @@
         .spinner {
             width: 36px; height: 36px;
             border: 3px solid var(--bg-tertiary);
-            border-top: 3px solid var(--nokia-blue);
+            border-top: 3px solid var(--primary-blue);
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }

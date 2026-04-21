@@ -31,7 +31,7 @@ from core.metrics import (
 )
 
 # ─── Plot Style Constants ────────────────────────────────────────────────────
-NOKIA_BLUE = "#124191"
+PRIMARY_BLUE = "#124191"
 ACCENT_GREEN = "#00c853"
 ACCENT_RED = "#ff1744"
 BG_DARK = "#0d1117"
@@ -116,7 +116,7 @@ def plot_osnr_vs_spans(
     _apply_dark_theme(fig, ax)
 
     # OSNR curve
-    ax.plot(data["spans"], data["osnr"], color=NOKIA_BLUE, linewidth=2.5,
+    ax.plot(data["spans"], data["osnr"], color=PRIMARY_BLUE, linewidth=2.5,
             marker="o", markersize=4, label="OSNR (dB)")
 
     # Threshold line
@@ -191,7 +191,7 @@ def plot_launch_power_sweep(
     _apply_dark_theme(fig, ax)
 
     # OSNR curve
-    ax.plot(data["powers"], data["osnr"], color=NOKIA_BLUE, linewidth=2.5,
+    ax.plot(data["powers"], data["osnr"], color=PRIMARY_BLUE, linewidth=2.5,
             label="OSNR (dB)")
 
     # Nonlinear regime shading (> +4 dBm)
@@ -261,7 +261,7 @@ def plot_ber_vs_osnr(
     _apply_dark_theme(fig, ax)
 
     # BER curve (semilogy)
-    ax.semilogy(osnr_db_values, ber_values, color=NOKIA_BLUE, linewidth=2.5,
+    ax.semilogy(osnr_db_values, ber_values, color=PRIMARY_BLUE, linewidth=2.5,
                 label=f"BER @ {bitrate_gbps} Gbps")
 
     # BER = 1e-9 threshold

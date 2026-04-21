@@ -4,7 +4,6 @@
 
 ![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-green)
-![Nokia](https://img.shields.io/badge/Nokia-Associate%20Engineer-124191)
 
 ---
 
@@ -122,7 +121,7 @@ python main.py --web
 - Interactive sliders for all link parameters
 - Configuration profile presets (submarine, metro, long-haul)
 - Tab-based plot viewer (OSNR vs spans, power sweep, BER curve, WDM)
-- Nokia-themed dark mode UI
+- Professional dark mode UI
 - Nonlinear effects toggle (GN model ON/OFF)
 
 ---
