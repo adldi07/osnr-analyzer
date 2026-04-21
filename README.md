@@ -18,6 +18,62 @@ The **Optical Signal-to-Noise Ratio (OSNR)** determines link quality. This tool 
 
 ---
 
+## System Architecture
+
+```mermaid
+graph TB
+    subgraph "CLI Layer"
+        CLI["main.py<br/>argparse CLI"]
+    end
+    
+    subgraph "Web Layer"
+        Flask["web/app.py<br/>Flask REST API"]
+        UI["web/templates/index.html<br/>Dashboard UI"]
+    end
+    
+    subgraph "Analysis Layer"
+        Sweep["analysis/sweep.py<br/>Parameter Sweeps"]
+        Opt["analysis/optimizer.py<br/>Optimization"]
+    end
+    
+    subgraph "Core Physics Engine"
+        Fiber["core/fiber.py<br/>FiberSpan"]
+        Amp["core/amplifier.py<br/>EDFA"]
+        Link["core/link.py<br/>OpticalLink"]
+        WDM["core/wdm.py<br/>WDMSystem"]
+        Met["core/metrics.py<br/>Q/BER/OSNR"]
+    end
+    
+    subgraph "Visualization"
+        Plot["visualization/plotter.py<br/>Matplotlib Figures"]
+    end
+
+    CLI --> Link
+    CLI --> Sweep
+    CLI --> Opt
+    CLI --> Plot
+    CLI --> Flask
+    Flask --> Link
+    Flask --> Sweep
+    Flask --> Opt
+    Flask --> Plot
+    Flask --> WDM
+    UI --> Flask
+    Sweep --> Link
+    Sweep --> Met
+    Opt --> Link
+    Opt --> Met
+    Link --> Fiber
+    Link --> Amp
+    Link --> Met
+    WDM --> Link
+    WDM --> Met
+    Plot --> Sweep
+    Plot --> Met
+```
+
+---
+
 ## Installation
 
 ```bash
