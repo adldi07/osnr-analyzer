@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="WDM Optical Link OSNR/BER Performance Analyzer — interactive dashboard for simulating multi-span amplified fiber links">
+    <title>WDM OSNR/BER Analyzer — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* ─── CSS Reset & Variables ───────────────────────────────── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --bg-card: #1c2128;
+            --nokia-blue: #124191;
+            --nokia-blue-light: #1a5bc4;
+            --accent-green: #00c853;
+            --accent-red: #ff1744;
+            --accent-amber: #ffab00;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #484f58;
+            --border-color: #30363d;
+            --border-focus: #388bfd;
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html { font-size: 14px; }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* ─── Header ─────────────────────────────────────────────── */
+        .header {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #0f1923 100%);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header-left { display: flex; align-items: center; gap: 16px; }
+        .header-logo {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--nokia-blue), var(--nokia-blue-light));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 18px; color: #fff;
+        }
+        .header-title { font-size: 1.25rem; font-weight: 600; }
+        .header-subtitle { font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px; }
+        .header-right { display: flex; align-items: center; gap: 12px; }
+
+        .config-select {
+            background: var(--bg-tertiary); color: var(--text-primary);
+            border: 1px solid var(--border-color); border-radius: var(--radius-sm);
+            padding: 8px 12px; font-family: inherit; font-size: 0.85rem;
+            cursor: pointer; transition: var(--transition);
+        }
+        .config-select:hover { border-color: var(--border-focus); }
+
+        .status-indicator {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.8rem; color: var(--text-secondary);
+        }
+        .status-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--accent-green);
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* ─── Main Layout ────────────────────────────────────────── */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            grid-template-rows: auto 1fr;
+            gap: 0;
+            min-height: calc(100vh - 73px);
+        }
+
+        /* ─── Controls Panel (Left) ──────────────────────────────── */
+        .controls-panel {
+            grid-row: 1 / -1;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 24px 20px;
+            overflow-y: auto;
+            max-height: calc(100vh - 73px);
+        }
+        .controls-panel::-webkit-scrollbar { width: 6px; }
+        .controls-panel::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 3px; }
+
+        .section-title {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
+            letter-spacing: 1.5px; color: var(--text-muted);
+            margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .control-group { margin-bottom: 18px; }
+        .control-label {
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 0.85rem; color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .control-value {
+            font-family: 'JetBrains Mono', monospace; font-weight: 500;
+            color: var(--nokia-blue-light); font-size: 0.85rem;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px;
+            background: var(--bg-tertiary); border-radius: 3px;
+            outline: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px;
+            border-radius: 50%; background: var(--nokia-blue);
+            border: 2px solid var(--nokia-blue-light);
+            cursor: pointer; transition: var(--transition);
+        }
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2); box-shadow: 0 0 10px rgba(18,65,145,0.5);
+        }
+
+        .btn-group { display: flex; gap: 4px; flex-wrap: wrap; }
+        .btn-option {
+            flex: 1; min-width: 60px; padding: 8px 4px;
+            background: var(--bg-tertiary); border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm); color: var(--text-secondary);
+            font-family: inherit; font-size: 0.8rem; cursor: pointer;
+            text-align: center; transition: var(--transition);
+        }
+        .btn-option:hover { border-color: var(--nokia-blue); color: var(--text-primary); }
+        .btn-option.active {
+            background: var(--nokia-blue); border-color: var(--nokia-blue);
+            color: #fff; font-weight: 600;
+        }
+
+        .toggle-group {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0;
+        }
+        .toggle-label { font-size: 0.85rem; color: var(--text-secondary); }
+        .toggle {
+            position: relative; width: 44px; height: 24px;
+            background: var(--bg-tertiary); border-radius: 12px;
+            cursor: pointer; transition: var(--transition);
+            border: 1px solid var(--border-color);
+        }
+        .toggle.active { background: var(--nokia-blue); border-color: var(--nokia-blue); }
+        .toggle::after {
+            content: ''; position: absolute; top: 3px; left: 3px;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: #fff; transition: var(--transition);
+        }
+        .toggle.active::after { transform: translateX(20px); }
+
+        /* ─── Results Panel (Top Right) ──────────────────────────── */
+        .results-panel {
+            padding: 24px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            align-content: start;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 20px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+        .result-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0;
+            height: 3px; background: var(--nokia-blue);
+        }
+        .result-card:hover {
+            border-color: var(--nokia-blue);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .result-card.pass::before { background: var(--accent-green); }
+        .result-card.fail::before { background: var(--accent-red); }
+
+        .result-label {
+            font-size: 0.7rem; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        .result-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem; font-weight: 700;
+            line-height: 1.2;
+        }
+        .result-unit {
+            font-size: 0.75rem; color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .result-value.green { color: var(--accent-green); }
+        .result-value.red { color: var(--accent-red); }
+        .result-value.blue { color: var(--nokia-blue-light); }
+        .result-value.amber { color: var(--accent-amber); }
+
+        .badge {
+            display: inline-block; padding: 6px 16px;
+            border-radius: 20px; font-size: 0.9rem;
+            font-weight: 700; letter-spacing: 1px;
+        }
+        .badge.pass { background: rgba(0,200,83,0.15); color: var(--accent-green); border: 1px solid rgba(0,200,83,0.3); }
+        .badge.fail { background: rgba(255,23,68,0.15); color: var(--accent-red); border: 1px solid rgba(255,23,68,0.3); }
+
+        /* ─── Plots Panel (Bottom Right) ─────────────────────────── */
+        .plots-panel {
+            padding: 0 24px 24px;
+        }
+
+        .tabs {
+            display: flex; gap: 4px;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 16px;
+        }
+        .tab {
+            padding: 10px 20px;
+            background: none; border: none; border-bottom: 2px solid transparent;
+            color: var(--text-secondary); font-family: inherit; font-size: 0.85rem;
+            cursor: pointer; transition: var(--transition);
+        }
+        .tab:hover { color: var(--text-primary); }
+        .tab.active {
+            color: var(--nokia-blue-light);
+            border-bottom-color: var(--nokia-blue);
+            font-weight: 600;
+        }
+
+        .plot-container {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            min-height: 400px;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        .plot-container img {
+            max-width: 100%; height: auto;
+            border-radius: var(--radius);
+        }
+
+        .plot-loading {
+            display: none; flex-direction: column;
+            align-items: center; gap: 12px;
+            color: var(--text-muted);
+        }
+        .plot-loading.active { display: flex; }
+
+        .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid var(--bg-tertiary);
+            border-top: 3px solid var(--nokia-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* ─── Loading Overlay ────────────────────────────────────── */
+        .loading-overlay {
+            display: none;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(13,17,23,0.6); backdrop-filter: blur(4px);
+            z-index: 200;
+            align-items: center; justify-content: center;
+        }
+        .loading-overlay.active { display: flex; }
+
+        /* ─── Responsive ─────────────────────────────────────────── */
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+            }
+            .controls-panel {
+                grid-row: auto;
+                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ─── Header ─────────────────────────────────────────────── -->
+    <header class="header">
+        <div class="header-left">
+            <div class="header-logo">W</div>
+            <div>
+                <div class="header-title">WDM OSNR/BER Analyzer</div>
+                <div class="header-subtitle">Optical Link Performance Dashboard</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <select class="config-select" id="configSelect" title="Load configuration profile">
+                <option value="">— Load Profile —</option>
+                {% for cfg in configs %}
+                <option value="{{ cfg }}">{{ cfg | replace('_', ' ') | title }}</option>
+                {% endfor %}
+            </select>
+            <div class="status-indicator">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Ready</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- ─── Main Layout ────────────────────────────────────────── -->
+    <div class="main-grid">
+        <!-- ─── Controls Panel ─────────────────────────────────── -->
+        <aside class="controls-panel">
+            <div class="section-title">Link Configuration</div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Number of Spans</span>
+                    <span class="control-value" id="spansValue">10</span>
+                </div>
+                <input type="range" id="spans" min="1" max="50" value="10" step="1">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Span Length (km)</span>
+                    <span class="control-value" id="spanLengthValue">80</span>
+                </div>
+                <input type="range" id="spanLength" min="20" max="150" value="80" step="5">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>Launch Power (dBm)</span>
+                    <span class="control-value" id="launchPowerValue">0</span>
+                </div>
+                <input type="range" id="launchPower" min="-5" max="8" value="0" step="0.5">
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">
+                    <span>EDFA Noise Figure (dB)</span>
+                    <span class="control-value" id="nfValue">5.0</span>
+                </div>
+                <input type="range" id="nf" min="3" max="8" value="5" step="0.5">
+            </div>
+
+            <div class="section-title" style="margin-top: 24px;">Signal Configuration</div>
+
+            <div class="control-group">
+                <div class="control-label"><span>Bitrate (Gbps)</span></div>
+                <div class="btn-group" id="bitrateGroup">
+                    <button class="btn-option active" data-value="10">10G</button>
+                    <button class="btn-option" data-value="40">40G</button>
+                    <button class="btn-option" data-value="100">100G</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label"><span>Modulation</span></div>
+                <div class="btn-group" id="modulationGroup">
+                    <button class="btn-option active" data-value="OOK">OOK</button>
+                    <button class="btn-option" data-value="QPSK">QPSK</button>
+                    <button class="btn-option" data-value="16QAM">16QAM</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label"><span>WDM Channels</span></div>
+                <div class="btn-group" id="wdmGroup">
+                    <button class="btn-option active" data-value="1">1</button>
+                    <button class="btn-option" data-value="40">40</button>
+                    <button class="btn-option" data-value="80">80</button>
+                </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 24px;">Advanced</div>
+
+            <div class="toggle-group">
+                <span class="toggle-label">Nonlinear Effects (GN model)</span>
+                <div class="toggle active" id="nlToggle" title="Toggle fiber nonlinear effects"></div>
+            </div>
+        </aside>
+
+        <!-- ─── Results Cards ──────────────────────────────────── -->
+        <section class="results-panel" id="resultsPanel">
+            <div class="result-card" id="osnrCard">
+                <div class="result-label">OSNR</div>
+                <div class="result-value blue" id="osnrValue">—</div>
+                <div class="result-unit">dB</div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">Q-Factor</div>
+                <div class="result-value blue" id="qValue">—</div>
+                <div class="result-unit">linear</div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">BER</div>
+                <div class="result-value blue" id="berValue">—</div>
+                <div class="result-unit">bit error rate</div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">OSNR Margin</div>
+                <div class="result-value blue" id="marginValue">—</div>
+                <div class="result-unit">dB</div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">Max Reach</div>
+                <div class="result-value amber" id="reachValue">—</div>
+                <div class="result-unit">km</div>
+            </div>
+            <div class="result-card">
+                <div class="result-label">Optimal Power</div>
+                <div class="result-value amber" id="optPowerValue">—</div>
+                <div class="result-unit">dBm</div>
+            </div>
+            <div class="result-card" id="statusCard">
+                <div class="result-label">Status</div>
+                <div id="statusBadge"><span class="badge">—</span></div>
+                <div class="result-unit" id="totalDistance">—</div>
+            </div>
+        </section>
+
+        <!-- ─── Plots Section ──────────────────────────────────── -->
+        <section class="plots-panel">
+            <div class="tabs">
+                <button class="tab active" data-plot="osnr_vs_spans">OSNR vs Spans</button>
+                <button class="tab" data-plot="power_sweep">Power Sweep</button>
+                <button class="tab" data-plot="ber_curve">BER Curve</button>
+                <button class="tab" data-plot="wdm">WDM Channels</button>
+            </div>
+            <div class="plot-container" id="plotContainer">
+                <div class="plot-loading active" id="plotLoading">
+                    <div class="spinner"></div>
+                    <span>Generating plot...</span>
+                </div>
+                <img id="plotImage" alt="Analysis plot" style="display:none;">
+            </div>
+        </section>
+    </div>
+
+    <!-- ─── JavaScript ─────────────────────────────────────────── -->
+    <script>
+    (function() {
+        'use strict';
+
+        // ── State ──────────────────────────────────────────────
+        let debounceTimer = null;
+        let currentPlot = 'osnr_vs_spans';
+
+        // ── DOM Elements ───────────────────────────────────────
+        const sliders = {
+            spans:       { el: document.getElementById('spans'),       val: document.getElementById('spansValue') },
+            spanLength:  { el: document.getElementById('spanLength'),  val: document.getElementById('spanLengthValue') },
+            launchPower: { el: document.getElementById('launchPower'), val: document.getElementById('launchPowerValue') },
+            nf:          { el: document.getElementById('nf'),          val: document.getElementById('nfValue') },
+        };
+
+        // ── Helper: Get Current Parameters ─────────────────────
+        function getParams() {
+            const bitrateBtn = document.querySelector('#bitrateGroup .btn-option.active');
+            const modBtn     = document.querySelector('#modulationGroup .btn-option.active');
+            const wdmBtn     = document.querySelector('#wdmGroup .btn-option.active');
+            const nlToggle   = document.getElementById('nlToggle');
+
+            return {
+                spans:       parseInt(sliders.spans.el.value),
+                span_length: parseFloat(sliders.spanLength.el.value),
+                launch_power:parseFloat(sliders.launchPower.el.value),
+                nf:          parseFloat(sliders.nf.el.value),
+                bitrate:     parseFloat(bitrateBtn ? bitrateBtn.dataset.value : '10'),
+                modulation:  modBtn ? modBtn.dataset.value : 'OOK',
+                wdm_channels:parseInt(wdmBtn ? wdmBtn.dataset.value : '1'),
+                include_nonlinear: nlToggle.classList.contains('active'),
+            };
+        }
+
+        // ── Slider Event Binding ───────────────────────────────
+        Object.values(sliders).forEach(s => {
+            s.el.addEventListener('input', () => {
+                s.val.textContent = s.el.value;
+                triggerUpdate();
+            });
+        });
+
+        // ── Button Group Binding ───────────────────────────────
+        document.querySelectorAll('.btn-group').forEach(group => {
+            group.querySelectorAll('.btn-option').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    group.querySelectorAll('.btn-option').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    triggerUpdate();
+                });
+            });
+        });
+
+        // ── Toggle Binding ─────────────────────────────────────
+        document.getElementById('nlToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            triggerUpdate();
+        });
+
+        // ── Tab Binding ────────────────────────────────────────
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentPlot = tab.dataset.plot;
+                loadPlot();
+            });
+        });
+
+        // ── Config Profile Loading ─────────────────────────────
+        document.getElementById('configSelect').addEventListener('change', async function() {
+            const name = this.value;
+            if (!name) return;
+
+            try {
+                const resp = await fetch(`/load_config/${name}`);
+                const cfg = await resp.json();
+
+                if (cfg.num_spans) sliders.spans.el.value = cfg.num_spans;
+                if (cfg.span_length_km) sliders.spanLength.el.value = cfg.span_length_km;
+                if (cfg.launch_power_dbm !== undefined) sliders.launchPower.el.value = cfg.launch_power_dbm;
+                if (cfg.edfa_noise_figure_db) sliders.nf.el.value = cfg.edfa_noise_figure_db;
+
+                // Update displayed values
+                Object.values(sliders).forEach(s => s.val.textContent = s.el.value);
+
+                // Update bitrate buttons
+                if (cfg.bitrate_gbps) {
+                    document.querySelectorAll('#bitrateGroup .btn-option').forEach(b => {
+                        b.classList.toggle('active', parseFloat(b.dataset.value) === cfg.bitrate_gbps);
+                    });
+                }
+
+                // Update modulation buttons
+                if (cfg.modulation) {
+                    document.querySelectorAll('#modulationGroup .btn-option').forEach(b => {
+                        b.classList.toggle('active', b.dataset.value === cfg.modulation);
+                    });
+                }
+
+                // Update WDM buttons
+                if (cfg.num_wdm_channels) {
+                    let matched = false;
+                    document.querySelectorAll('#wdmGroup .btn-option').forEach(b => {
+                        if (parseInt(b.dataset.value) === cfg.num_wdm_channels) {
+                            b.classList.add('active');
+                            matched = true;
+                        } else {
+                            b.classList.remove('active');
+                        }
+                    });
+                    if (!matched) {
+                        document.querySelector('#wdmGroup .btn-option').classList.add('active');
+                    }
+                }
+
+                triggerUpdate();
+            } catch (err) {
+                console.error('Failed to load config:', err);
+            }
+        });
+
+        // ── Debounced Update Trigger ───────────────────────────
+        function triggerUpdate() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                runAnalysis();
+                loadPlot();
+            }, 500);
+        }
+
+        // ── Status Helpers ─────────────────────────────────────
+        function setStatus(text, color) {
+            const dot  = document.getElementById('statusDot');
+            const txt  = document.getElementById('statusText');
+            dot.style.background = color;
+            txt.textContent = text;
+        }
+
+        // ── Run Analysis ───────────────────────────────────────
+        async function runAnalysis() {
+            setStatus('Analyzing...', 'var(--accent-amber)');
+
+            try {
+                const resp = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(getParams()),
+                });
+                const data = await resp.json();
+                updateResults(data);
+                setStatus('Ready', 'var(--accent-green)');
+            } catch (err) {
+                console.error('Analysis failed:', err);
+                setStatus('Error', 'var(--accent-red)');
+            }
+        }
+
+        // ── Update Result Cards ────────────────────────────────
+        function updateResults(data) {
+            const perf = data.performance;
+            const link = data.link;
+            const reach = data.max_reach;
+            const opt   = data.optimal_power;
+            const isPass = perf.pass;
+
+            // OSNR
+            const osnrEl = document.getElementById('osnrValue');
+            osnrEl.textContent = perf.osnr_db.toFixed(2);
+            osnrEl.className = 'result-value ' + (isPass ? 'green' : 'red');
+            document.getElementById('osnrCard').className = 'result-card ' + (isPass ? 'pass' : 'fail');
+
+            // Q-Factor
+            document.getElementById('qValue').textContent = perf.q_factor.toFixed(2);
+
+            // BER
+            document.getElementById('berValue').textContent = perf.ber_scientific;
+
+            // Margin
+            const marginEl = document.getElementById('marginValue');
+            marginEl.textContent = perf.margin_db.toFixed(2);
+            marginEl.className = 'result-value ' + (perf.margin_db >= 0 ? 'green' : 'red');
+
+            // Max Reach
+            document.getElementById('reachValue').textContent = reach.max_distance_km.toFixed(0);
+
+            // Optimal Power
+            document.getElementById('optPowerValue').textContent = opt.optimal_power_dbm.toFixed(1);
+
+            // Status Badge
+            const badge = document.getElementById('statusBadge');
+            badge.innerHTML = isPass
+                ? '<span class="badge pass">✓ PASS</span>'
+                : '<span class="badge fail">✗ FAIL</span>';
+
+            // Total Distance
+            document.getElementById('totalDistance').textContent =
+                `${link.total_length_km} km total`;
+
+            // Status card styling
+            document.getElementById('statusCard').className = 'result-card ' + (isPass ? 'pass' : 'fail');
+        }
+
+        // ── Load Plot ──────────────────────────────────────────
+        async function loadPlot() {
+            const loading = document.getElementById('plotLoading');
+            const img     = document.getElementById('plotImage');
+            loading.classList.add('active');
+            img.style.display = 'none';
+
+            try {
+                const resp = await fetch(`/plot/${currentPlot}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(getParams()),
+                });
+                const data = await resp.json();
+
+                if (data.image) {
+                    img.src = 'data:image/png;base64,' + data.image;
+                    img.style.display = 'block';
+                }
+            } catch (err) {
+                console.error('Plot failed:', err);
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // ── Initial Load ───────────────────────────────────────
+        runAnalysis();
+        loadPlot();
+    })();
+    </script>
+</body>
+</html>

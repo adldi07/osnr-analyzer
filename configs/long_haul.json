@@ -1,0 +1,13 @@
+{
+  "num_spans": 20,
+  "span_length_km": 100,
+  "launch_power_dbm": 1,
+  "attenuation_db_per_km": 0.2,
+  "edfa_noise_figure_db": 5.0,
+  "optical_bw_hz": 12.5e9,
+  "bitrate_gbps": 40,
+  "modulation": "QPSK",
+  "num_wdm_channels": 80,
+  "channel_spacing_ghz": 50,
+  "osnr_threshold_db": 18.0
+}
