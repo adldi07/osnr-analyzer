@@ -47,7 +47,7 @@ def load_config(name: str) -> dict:
 def print_report(link_result: dict, perf: dict, reach: dict, opt: dict,
                  nf_db: float, wdm_summary: dict = None) -> None:
     """Print a formatted CLI performance report."""
-    status_icon = "\u2713 PASS" if perf["pass"] else "\u2717 FAIL"
+    status_icon = "[PASS]" if perf["pass"] else "[FAIL]"
     status_color_start = ""
     status_color_end = ""
 
